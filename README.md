@@ -15,7 +15,7 @@
 <p>Using a partially completed game of Tic Tac Toe used in <a href="http://ggp.stanford.edu/applications/060401.php">Exercise 6.4.1</a> as an example, the diagram (produced by graphiz from the python dictionary structure I use to store the game in) illustrates how the Montecarlo method explores the game tree and comes up a "best move" from a given state.</p> 
 
 <object data="tictactoe1.svg" type="image/svg+xml" width="1000">
-  <p>Oops, no svg</p>
+  <p><img src="tictactoe1.png" /></p>
 </object>
 
 
