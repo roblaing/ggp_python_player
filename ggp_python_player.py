@@ -21,7 +21,7 @@ def depthcharge(state, game, timeout):
     else:
         moves = findmoves(state, game)
         if len(moves) == 0:
-            print(moves, state, findterminalp(state, game))
+            print moves, state, findterminalp(state, game)
         move = random.choice(moves)
         next_state = findnext(move, state, game)
         return depthcharge(next_state, game, timeout)
@@ -241,7 +241,7 @@ def findreward(role, state, game):
                     # break
         # hack to workaround bug in generate_prune('goal', trues, game)
         if not all([len(value) == 1 for value in values]):
-            print("Problem with findreward for ", values, state)
+            # print("Problem with findreward for ", values, state)
             tmp_lst = [0 for dummy in values]
             for idx in range(len(values)):
                 if max([int(num) for num in values[idx]]) == 100:
@@ -269,8 +269,11 @@ def findterminalp(state, game):
     if 'terminal' not in game['game_tree'][state]:
         trues = [['true', list(base) if isinstance(base, tuple) else base] for base in state]
         terminals = generate_prune('terminal', trues, game)
+        # print terminals
         game['game_tree'][state]['terminal'] = (len(terminals) > 0)
         for terminal in terminals:
+            if str(terminal).find("['not',") == -1:
+                break 
             if str(terminal).find("['not',") != -1 and ground(terminal):
                 game['game_tree'][state]['terminal'] = False
                 break
@@ -603,7 +606,6 @@ def generate_prune(relation_constant, trues, game):
             else:
                 ret_list += pruned_rule
     return ret_list
-
 
 
 
