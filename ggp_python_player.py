@@ -38,8 +38,8 @@ def montecarlo(move, state, game, timeout):
 
 def bestmove(role, state, game, timeout):
     move = tuple([findlegalx(player, state, game) for player in findroles(game)])
-    actions = findmoves(state, game)
     idx = findroles(game).index(role)
+    actions = findmoves(state, game)
     average_score = 0.0
     time_per_move = (timeout - time.time())/float(len(actions))
     for count in range(len(actions)):
@@ -106,7 +106,7 @@ def findinits(game):
 
 def findmoves(state, game):
     """
-    A modification of findlegals that returns the "edges" with a move for each role
+    A modification of findlegals that returns the joint moves, or "edges", with a move for each role
     even if it's just 'noop' to make traversing the game tree easier
     """
     if 'game_tree' not in game:
@@ -538,7 +538,26 @@ def generate(expanded_rule, trues, game):
         return expanded_rule
     ret_lst = []
     var_dir = {}
-    for body_rule in expanded_rule[2:]:
+    # try to optimise by doing
+    # 1. does
+    # 2. true
+    # 3. relation_constants
+    body_rules = list(expanded_rule[2:])
+    tmp_lst = []
+    if str(body_rules).find('does') != -1:
+        for body_rule in body_rules:
+            if isinstance(body_rule[0], str) and body_rule[0] == 'does':
+                tmp_lst.append(body_rule)
+    if str(body_rules).find('true') != -1:
+        for body_rule in body_rules:
+            if isinstance(body_rule[0], str) and body_rule[0] == 'true':
+                tmp_lst.append(body_rule)
+    for body_rule in tmp_lst:
+        body_rules.remove(body_rule)
+    body_rules = tmp_lst + body_rules
+    # print expanded_rule
+    # print body_rules
+    for body_rule in body_rules:
         var_dir = build_var_dict(body_rule, var_dir)
         exp_rules = expand_literal(expanded_rule, var_dir)
         if isinstance(exp_rules[0], str):
@@ -609,6 +628,7 @@ def generate_prune(relation_constant, trues, game):
 
 
 
+
 ##########################################################
 
 # GGP protocol handlers as described in http://logic.stanford.edu/ggp/chapters/chapter_04.html
@@ -636,8 +656,9 @@ def play(game_id, move):
     if move != 'nil':
         game['state'] = findnext(list2tuple(move), game['state'], game)
     return_move = bestmove(game['player'], game['state'], game, timeout)
-    return str(return_move).replace(', ', ' ').replace("'", '')
-
+    return_move = str(return_move).replace(', ', ' ').replace("'", '')
+    # print("return move ", return_move)
+    return return_move
     
 def stop(game_id, move):
     global game
@@ -700,7 +721,12 @@ def http_handler(text):
     elif result[0].lower() == 'start':
         response(start(result[1], result[2], result[3], result[4], result[5]))
     elif result[0] == 'play':
-        response(play(result[1], result[2]))
+        # check move is valid since they can get garbled on bad lines
+        if result[2] == 'nil' or \
+          list2tuple(result[2]) in game['game_tree'][game['state']]['actions'].keys():
+            response(play(result[1], result[2]))
+        else:
+            response('done')
     elif result[0] == 'stop':
         response(stop(result[1], result[2]))
     elif result[0] == 'abort':
