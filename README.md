@@ -4,15 +4,16 @@
 
 <p>It requires Prolog &mdash; <a href="http://www.dcc.fc.up.pt/~vsc/Yap/">yap</a>, <a href="http://www.swi-prolog.org/">swipl</a> or any other <a href="http://www.gprolog.org/">Prolog</a> should work provided it can be called from the command line as a script.</p>
 
-<p>After many hours of trying to write my own interpreter and looking at the various Prolog interfaces available for Python, I opted for the kludge of having my Python script generate a Prolog script which is then executed by <a href="https://docs.python.org/2/library/subprocess.html"><code>subprocess.check_output(...)</code></a>, the output of which is then read back into the Python script &mdash; not an elegant or pretty solution, but it does have the advantage it should work with whatever flavour of Prolog you like.</p>
+<p>After many hours of trying to write my own interpreter and looking at the various Prolog interfaces available for Python, I opted for the kludge of having my Python script generate a Prolog script which is then executed via <a href="https://docs.python.org/2/library/subprocess.html"><code>subprocess.Popen(PROLOG, stdin = subprocess.PIPE, stdout = subprocess.PIPE)</code></a>, where the constant PROLOG is defined near the top of the file as:</p>
 
-<p>Near the top of my script you'll see: <br><code>
-PROLOG = '#!/usr/bin/yap -L --'<br>
-# PROLOG = '#!/usr/bin/swipl -f -q'</code></p>
+<p><code>PROLOG = ['swipl','-s', '/dev/stdin']</code></p>
 
-<p>Switching between yap and swipl just involves moving the comment hash, and using a completely different Prolog means looking up how to call it. You may also need to edit the path if your Prolog isn't in /usr/bin.</p>
+<p>If you prefer yap, you can change that to:<br>
+<code>PROLOG = ['yap','-L', '/dev/stdin']</code></p>
 
-<p>At this stage it needs python2.7 or higher (for argparse) but doesn't work with python3 (yet) because of its dependency on BaseHTTPServer.<p>
+<p>Presumably other prologs would work the same with whatever flags they need to read a script (which is read from /dev/stdin for the above two prologs since they don't respect Unix's '-' convention).</p>
+
+<p>At this stage, my script needs python2.7 or higher (for argparse) but doesn't work with python3 (yet) because of its dependency on BaseHTTPServer.<p>
 
 <p>The default hostname is 127.0.0.1 and port is 9147 which can be changed by calling, say, <code>python2.7 ggp_python_player.py -n 171.64.71.18 -p 9148</code>.</p>
 
