@@ -21,7 +21,7 @@ DOT_FILE_NAME = False
 def depthcharge(state, game, timeout):
     if findterminalp(state, game) or time.time() > timeout:
         if 'values' not in game['tree'][state]:
-           findreward(findroles(game)[0], state, game) 
+           findreward(findroles(game)[0], state, game)
         return game['tree'][state]['values']
     else:
         moves = findmoves(state, game)
@@ -30,7 +30,6 @@ def depthcharge(state, game, timeout):
         move = random.choice(moves)
         next_state = findnext(move, state, game)
         return depthcharge(next_state, game, timeout)
-            
 
 def montecarlo(move, state, game, timeout):
     next_state = findnext(move, state, game)
@@ -43,9 +42,7 @@ def montecarlo(move, state, game, timeout):
 
 def bestmove(role, state, game, timeout):
     idx = findroles(game).index(role)
-    # print(idx)
     actions = findmoves(state, game)
-    # print("Actions ", actions)
     move = random.choice(actions)
     average_score = 0.0
     time_per_move = (timeout - time.time())/float(len(actions))
@@ -54,12 +51,10 @@ def bestmove(role, state, game, timeout):
             game['tree'][state]['actions'][actions[count]]['score_count'] = [0 for dummy in findroles(game)] + [1]
         timelimit = timeout - time_per_move*(len(actions) - count - 1)
         scores = montecarlo(actions[count], state, game, timelimit)
-        estimated_utility = float(scores[idx])/float(scores[-1]) # , actions[count]
-        # print(estimated_utility, actions[count])
+        estimated_utility = float(scores[idx])/float(scores[-1])
         if estimated_utility > average_score:
             average_score = estimated_utility
             move = actions[count]
-    # print("Best move ", move[idx])
     return move[idx]
 
 def findroles(game):
@@ -270,7 +265,7 @@ def game2dot(game_dict, filename):
                 graph_list.append('"' + from_node + '" -> "' + to_node + '" [label = "' + edge_label + '"];')
         else:
             if len(node) > 1:
-                from_node = str(node).replace(', ', ' ').replace("'", '') 
+                from_node = str(node).replace(', ', ' ').replace("'", '')
             else:
                 from_node = node[0]
             from_node += '\\n' + str(game_dict[node]['values'])
@@ -278,7 +273,7 @@ def game2dot(game_dict, filename):
     dot_file = open(filename, "w")
     print("digraph game_tree {", file = dot_file)
     print("node [shape = doublecircle]; " + " ".join(terminal_list) + ";", file = dot_file)
-    print("node [shape = circle];", file = dot_file)        
+    print("node [shape = circle];", file = dot_file)
     for element in graph_list:
         print(element, file = dot_file)
     print("}", file = dot_file)
@@ -293,6 +288,7 @@ def info():
     return "((name " + PLAYER_NAME + ")(status available))"
     
 def start(game_id, player, rules, startclock, playclock):
+    # print(rules)
     global game
     timeout = time.time() + TIME_MARGIN * float(startclock)
     game = {}
@@ -309,19 +305,17 @@ def start(game_id, player, rules, startclock, playclock):
 def play(game_id, move):
     global game
     move = rewrite_move(move)
-    # print("Move: ", move)
+    # print("Move: " + str(move))
     # quit game if moves become garbled due to timeouts or whatever 
-    if move != 'nil' and move not in game['tree'][game['state']]['actions'].keys():
-        return 'done'
+    # if move not in ('nil', 'undefined') and move not in game['tree'][game['state']]['actions'].keys():
+    #    return 'done'
     timeout = time.time() + TIME_MARGIN * float(game['playclock'])
-    if move != 'nil':
+    if move not in ('nil', 'undefined'):
         game['state'] = findnext(move, game['state'], game)
-    # print("State: ", game['state'])
     return_move = bestmove(game['player'], game['state'], game, timeout)
     idx = return_move.find('(')
     if idx != -1:
-        return_move = '(' + return_move[:idx] + ',' + return_move[idx + 1:]
-    # print(return_move)
+        return_move = '( ' + return_move[:idx] + " " + " ".join(return_move[idx + 1: -1].split(',')) + ' )'
     return return_move
     
 def stop(game_id, move):
@@ -384,12 +378,15 @@ def response(text):
     http.wfile.write(text)
 
 def http_handler(text):
+    # print(text)
     result = parse(text)
+    # print(result)
     if result[0].lower() == 'info':
         response(info())
     elif result[0].lower() == 'start':
         response(start(result[1], result[2], result[3], result[4], result[5]))
     elif result[0] == 'play':
+        # print("Move " + str(result[2]))
         response(play(result[1], result[2]))
     elif result[0] == 'stop':
         response(stop(result[1], result[2]))
@@ -401,9 +398,9 @@ def http_handler(text):
 class myHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def do_POST(self):
-        global http #, origin   # origin commented out because of bug in ggp-base
+        global http, origin   # origin commented out because of bug in ggp-base
         http = self
-        # origin = self.headers['Origin']
+        origin = self.headers['Origin']
         length = int(self.headers['Content-length'])
         http_handler(self.rfile.read(length))
  
