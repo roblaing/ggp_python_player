@@ -207,25 +207,29 @@ def prolog_rules(rules):
     by case basis
     """
     def rewrite(rule):
-        if all([isinstance(atom, str) for atom in rule]) and rule[0] != '<=':
-            return rule[0] + str(rule[1:]).replace('[', '(').replace(']',')').replace("'",'')
+        "Recursive helper for nested s-expressions"
+        if all([isinstance(atom, str) for atom in rule]) and rule[0] == 'or':
+            return '( ' + ' ; '.join(rule[1:]) + ' )'
+        elif all([isinstance(atom, str) for atom in rule]) and rule[0] != '<=':
+            return rule[0] + str(rule[1:]).replace('[', '(').replace(']', ')').replace("'", '')
         else:
             rule_copy = list(rule)
             for idx in range(len(rule)):
                 if isinstance(rule[idx], list):
                     rule_copy[idx] = rewrite(rule_copy[idx])
-            return rewrite(rule_copy)    
-    
-    prolog  = ':- set_prolog_flag(verbose, silent). '
-    prolog += ':- initialization(main). '
-    prolog += 'distinct(A, B) :- A \= B. '
-    prolog += 'or(A, B) :- (A ; B). '
+            return rewrite(rule_copy)
+
+    prolog = ':- set_prolog_flag(verbose, silent).\n'
+    prolog += ':- initialization(main).\n'
+    prolog += 'distinct(A, B) :- A \\= B.\n'
+    # prolog += 'or(A, B) :- (A ; B). '
     for rule in rules:
         if rule[0] != '<=':
-            prolog += rewrite(rule) + '. '
+            next_rule = rewrite(rule) + '.\n'
         else:
-            prolog += rewrite(rule[1]) + ' :- ' + ", ".join([rewrite(body) \
-              for body in rule[2:]]) + '. '    
+            next_rule = rewrite(rule[1]) + ' :- ' + ", ".join([rewrite(body) \
+              for body in rule[2:]]) + '.\n'
+        prolog += next_rule
     return prolog
 
 def game2dot(game_dict, filename):
@@ -316,6 +320,7 @@ def play(game_id, move):
     idx = return_move.find('(')
     if idx != -1:
         return_move = '( ' + return_move[:idx] + " " + " ".join(return_move[idx + 1: -1].split(',')) + ' )'
+    print ("Return move " + return_move)
     return return_move
     
 def stop(game_id, move):
