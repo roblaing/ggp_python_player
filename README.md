@@ -17,9 +17,13 @@
 
 <p>The default hostname is 127.0.0.1 and port is 9147 which can be changed by calling, say, <code>python2.7 ggp_python_player.py -n 171.64.71.18 -p 9148</code>.</p>
 
+<p>There are two versions, a "no cache" version which I did to work around the problem that my hosting service quickly switches off the instance of the player because it uses too much memory, and a "with cache version" which creates a stronger player and also has the option of writing the game tree created as python dictionary out as a graphviz graphic.</p>
+
 <p>Adding <code>-g <i>filename</i></code> will generate a <a href ="http://www.graphviz.org/content/dot-language">graphviz dot</a> file which can the be used to generate a graphic of the game tree like the example below.</p>
 
 <p>I'm only an intermediate Python and novice Prolog programmer, so suggestions from advanced programmers on how to improve this code will be gladly accepted.</p>
+
+<p>A third version which stores the game tree as a postgres database is work in progress.</p>
 
 <h2>Game Description Language (GDL)</h2>
 
